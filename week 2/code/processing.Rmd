@@ -58,7 +58,33 @@ Clean the demographics data so that summaries of age and gender can be made in t
 
 ```{r}
 
-#dat_age_gender <- data_demographics_raw 
+ dat_age_gender <- data_demographics_raw %>% 
+   rename(unique_id = subject, item = trialcode) %>% 
+   select(unique_id, item, response)
+
+temp <- dat_age_gender %>% 
+  filter(item == "age")
+
+temp2 <- dat_age_gender %>% 
+  filter(item == "age") %>% 
+mutate(response = str_remove_all(response, "\\D"),
+         response = na_if(response, ""),
+       response = as.numeric(response))
+
+temp3 <- dat_age_gender %>% 
+filter(item == "gender") %>% 
+#put everything into lowercase letters
+  mutate(response = if_else(item == "gender", tolower(response), response)) %>%
+  # Standardize 'response' for gender to "female", "male" or "non binary"
+  mutate(response = case_when(
+    item == "gender" & response %in% c("female", "f") ~ "female",  # Map to "female"
+    item == "gender" & response %in% c("male", "m") ~ "male", 
+    item == "gender" & response %in% c("non binary", "non-binary", "nb") ~ "non binary", 
+    item == "gender" ~ NA_character_,  #set all responses that werent covered in the code above to "NA"
+    TRUE ~ response  # Keep other responses unchanged (like age)
+  ))
+
+
 
 ```
 
