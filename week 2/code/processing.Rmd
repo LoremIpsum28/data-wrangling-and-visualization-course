@@ -68,23 +68,46 @@ temp <- dat_age_gender %>%
 temp2 <- dat_age_gender %>% 
   filter(item == "age") %>% 
 mutate(response = str_remove_all(response, "\\D"),
-         response = na_if(response, ""),
-       response = as.numeric(response))
+         response = na_if(response, "")
+       )
+colnames(temp2)
+colnames(temp3)
 
 temp3 <- dat_age_gender %>% 
-filter(item == "gender") %>% 
+ filter(item == "gender") %>% 
 #put everything into lowercase letters
   mutate(response = if_else(item == "gender", tolower(response), response)) %>%
   # Standardize 'response' for gender to "female", "male" or "non binary"
-  mutate(response = case_when(
-    item == "gender" & response %in% c("female", "f") ~ "female",  # Map to "female"
-    item == "gender" & response %in% c("male", "m") ~ "male", 
+  mutate(response = case_when( 
+    #unify all variations to "female"
+    item == "gender" & response %in% c("female", "f") ~ "female",  
+    #unify all variations to "male"
+    item == "gender" & response %in% c("male", "m") ~ "male",
+    #unify all variations to "non binary"
     item == "gender" & response %in% c("non binary", "non-binary", "nb") ~ "non binary", 
-    item == "gender" ~ NA_character_,  #set all responses that werent covered in the code above to "NA"
-    TRUE ~ response  # Keep other responses unchanged (like age)
+    #set all responses that werent covered in the code above to "NA"
+    item == "gender" ~ NA_character_, 
+    # Keep other responses unchanged (like age)
+    TRUE ~ response  
   ))
 
+# Assuming temp2 has cleaned age data and temp3 has cleaned gender data
+combined_data <- bind_rows(temp2, temp3)
+# Pivot the combined data to have separate 'age' and 'gender' columns
+final_data1 <- combined_data %>%
+  #pivot the format from item and response to age and gender
+  pivot_wider(names_from = item, values_from = response)
+library("purrr")
+final_data2 <- final_data1 %>% 
+  #remove all non-unique entries
+  mutate(
+    age = map_chr(age, ~ ifelse(length(unique(.x)) == 1, unique(.x)[1], NA_character_)),
+    gender = map_chr(gender, ~ ifelse(length(unique(.x)) == 1, unique(.x)[1], NA_character_))
+  )
 
+final_data3 <- final_data2 %>% 
+  mutate(age = as.numeric(age))
+  
 
 ```
 
