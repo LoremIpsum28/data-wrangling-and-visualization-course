@@ -109,6 +109,33 @@ final_data3 <- final_data2 %>%
   mutate(age = as.numeric(age))
   
 
+library(ggplot2)
+
+# Boxplot to show age distribution and outliers
+ggplot(final_data3, aes(y = age)) +
+  geom_boxplot() +
+  labs(title = "Distribution of Ages with Outliers", y = "Age") +
+  theme_minimal()
+
+# Histogram to show distribution of age
+ggplot(final_data3, aes(x = age)) +
+  geom_histogram(binwidth = 5, fill = "blue", color = "black") +
+  labs(title = "Age Distribution", x = "Age", y = "Count") +
+  theme_minimal()
+
+# Summary statistics for age
+summary_stats <- final_data3 %>%
+  summarise(
+    mean_age = mean(age, na.rm = TRUE),
+    median_age = median(age, na.rm = TRUE),
+    sd_age = sd(age, na.rm = TRUE),
+    min_age = min(age, na.rm = TRUE),
+    max_age = max(age, na.rm = TRUE)
+  )
+
+summary_stats
+
+
 ```
 
 # Exclusions / data quality
