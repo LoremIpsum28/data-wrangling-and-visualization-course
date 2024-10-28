@@ -18,8 +18,3 @@ Course content covers:
 ## Licence
 
 All materials are public domain under a CC-0 1.0 licence. You may therefore use or modify these materials however you like.
-
-# TODO
-
-- NA
-change
