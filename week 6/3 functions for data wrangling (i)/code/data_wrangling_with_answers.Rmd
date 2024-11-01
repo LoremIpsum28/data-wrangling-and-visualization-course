@@ -75,7 +75,7 @@ data_amp_raw <- read_csv(file = "../data/raw/data_amp_raw.csv")
 A very early step in any data processing is to understand how many rows are in a data frame, as this often represents the number of participants or total number of trials. This is useful to check at multiple steps of your data processing to make sure you have not done something wrong. 
 
 ```{r}
-
+t
 nrow(data_demographics_raw)
 
 nrow(data_selfreport_raw)
