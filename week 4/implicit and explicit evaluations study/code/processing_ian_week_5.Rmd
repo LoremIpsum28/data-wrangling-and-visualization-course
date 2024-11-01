@@ -248,10 +248,21 @@ rm(data_amp_complete)
 Create an exclusion variable `exclude_amp_performance` based on AMP performance: "exclude" if more than 10% of the test block trials trials are < 100ms, or "include" if not.
 
 ```{r}
+data_amp_tidied_complete %>%  count(rt) %>% arrange(rt)
+
+test_fast_trial <- data_amp_tidied_complete %>% 
+  mutate(fast_trial_test = ifelse(rt < 100, 1, 0)) %>% 
+  group_by(unique_id) %>% 
+  summarise(percent_fast_trial_test = mean(fast_trial_test)*100)
 
 
 
 
+data_amp_performance_criteria <- data_amp_tidied_complete %>% 
+  mutate(fast_trial = ifelse(rt < 100, 1, 0)) %>% 
+  group_by(unique_id) %>% 
+  summarise(percent_fast_trials = mean(fast_trial)*100) %>% 
+  mutate(exclude_amp_performance = ifelse(percent_fast_trials > 10, "exclude", "include"))
 
 
 data_amp_performance_criteria <- data_amp_tidied_complete |>
@@ -263,6 +274,7 @@ data_amp_performance_criteria <- data_amp_tidied_complete |>
   # flag unique_ids that have too many fast trials
   mutate(exclude_amp_performance = ifelse(percent_fast_trials > 10, "exclude", "include"))
 
+?ifelse
 ```
 
 ## Self-reports
