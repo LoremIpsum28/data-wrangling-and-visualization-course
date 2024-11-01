@@ -66,6 +66,19 @@ data_demographics_raw |>
 yes - n is different for some subjects
 
 ```{r}
+dat_unique_id <- data_demographics_raw %>% 
+  rename(unique_id = subject) %>% 
+  count(unique_id) %>%
+  filter(n == 2) %>% 
+  select(unique_id)
+
+dat_unique_id %>% count(unique_id) %>% 
+  arrange(desc(n))
+
+
+
+
+
 
 dat_unique_id <- data_demographics_raw |>
   rename(unique_id = subject) |>
@@ -80,6 +93,20 @@ dat_unique_id <- data_demographics_raw |>
 Clean the demographics data so that summaries of age and gender can be made in the analysis.
 
 ```{r}
+dat_age <- data_demographics_raw %>% 
+  rename(unique_id = subject, item = trialcode) %>% 
+  select(unique_id, item, response) %>% 
+  filter(item == "age") %>% 
+  rename(age = response) %>% 
+  mutate(age = str_remove_all(age, "[^\\d.]"),
+         age = na_if(age, ""),
+         age = as.numeric(age)) %>% 
+  select(unique_id, age)
+
+
+
+
+
 
 # wrangle the age data out of the raw
 dat_age <- data_demographics_raw |>
@@ -96,6 +123,26 @@ dat_age <- data_demographics_raw |>
          age = as.numeric(age)) |>
   select(unique_id, age)
   #select(-item) # alternative: negative selection
+
+dat_gender <- data_demographics_raw %>% 
+  rename(unique_id = subject, item = trialcode) %>% 
+  select(unique_id, item, response) %>% 
+  filter(item == "gender") %>% 
+  rename(gender = response) %>% 
+  mutate(gender = str_to_lower(gender),
+         gender = str_remove_all(gender, "[\\d.]"),
+         gender = na_if(gender, ""),
+         gender = case_when(gender == "woman" ~ "female",
+                            gender == "yes" ~ NA_character_,
+                            gender == "man" ~ "male",
+                            gender == "girl" ~ "female",
+                            gender == "dude" ~ "male",
+                            gender == "non binary" ~ "non-binary",
+                            TRUE ~ gender)) %>% 
+  select(unique_id, gender)
+
+
+
 
 # wrangle the gender data out of the raw
 dat_gender <- data_demographics_raw |>
@@ -124,10 +171,15 @@ dat_gender <- data_demographics_raw |>
 ## Combine
 
 ```{r}
+dat_combined <- dat_unique_id %>% 
+  left_join(dat_age, by = "unique_id") %>% 
+  left_join(dat_gender, by = "unique_id")
 
-# dat_unique_id
-# dat_age
-# dat_gender
+dat_combined %>%  count(unique_id) %>% 
+  arrange(desc(n))
+dat_unique_id
+dat_age
+dat_gender
 
 ```
 
@@ -140,6 +192,24 @@ dat_gender <- data_demographics_raw |>
 Create an exclusion variable `exclude_amp_completeness` based on the AMP having the right number of trials.
 
 ```{r}
+data_amp_tidied <- data_amp_raw %>% 
+  rename(unique_id = subject, 
+         block_type = blockcode,
+         rt = latency) %>% 
+  select(unique_id, block_type, rt) %>% 
+  filter(block_type == "test")
+
+data_amp_tidied %>% 
+  count(unique_id, name = "n_trials") %>% 
+  count(n_trials, name = "n_participants") %>% 
+  arrange(desc(n_trials))
+
+data_amp_complete <- data_amp_tidied %>% 
+  count(unique_id, name = "n_trials") %>% 
+  filter(n_trials == "72")
+
+data_amp_tidied_complete <- data_amp_tidied %>% 
+  semi_join(data_amp_complete, by = "unique_id")
 
 # basic tidying
 data_amp_tidied <- data_amp_raw |>
@@ -170,7 +240,7 @@ data_amp_tidied_complete |>
   arrange(desc(n_participants))
   
 # rm(data_complete_amp) # remove from environment
-
+rm(data_amp_complete)
 ```
 
 ## Fast trials
@@ -178,6 +248,11 @@ data_amp_tidied_complete |>
 Create an exclusion variable `exclude_amp_performance` based on AMP performance: "exclude" if more than 10% of the test block trials trials are < 100ms, or "include" if not.
 
 ```{r}
+
+
+
+
+
 
 data_amp_performance_criteria <- data_amp_tidied_complete |>
   mutate(fast_trial = ifelse(rt < 100, 1, 0)) |>
